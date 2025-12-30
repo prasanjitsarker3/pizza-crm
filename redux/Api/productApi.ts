@@ -36,6 +36,16 @@ export const productApi = baseApi.injectEndpoints({
             },
             providesTags: [TagTypes.product]
         }),
+        getTopProducts: builder.query({
+            query: (args: any) => {
+                return {
+                    url: "/products/top",
+                    method: "GET",
+                    params: args
+                }
+            },
+            providesTags: [TagTypes.product]
+        }),
         getSingleProduct: builder.query({
             query: (id: string) => {
                 return {
@@ -75,6 +85,7 @@ export const {
     useGetSingleProductQuery,
     useUpdateProductMutation,
     useGetNewProductsQuery,
+    useGetTopProductsQuery,
     useDeleteProductMutation,
     useLazyGetAllProductsQuery
 

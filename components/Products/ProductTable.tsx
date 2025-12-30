@@ -156,7 +156,7 @@ const ProductTableData = () => {
   };
 
   return (
-    <div className="w-full p-3">
+    <div className="w-full p-3 bg-white">
       <div className="w-full flex justify-between items-center mb-5">
         <form
           onSubmit={handleSearch}
@@ -299,12 +299,12 @@ const ProductTableData = () => {
                           key={index}
                           variant="outline"
                           className={`text-xs ${level === "HIGH"
-                              ? "bg-red-100 text-red-700 border-red-200"
-                              : level === "MEDIUM"
-                                ? "bg-orange-100 text-orange-700 border-orange-200"
-                                : level === "LOW"
-                                  ? "bg-yellow-100 text-yellow-700 border-yellow-200"
-                                  : "bg-gray-100 text-gray-700 border-gray-200"
+                            ? "bg-red-100 text-red-700 border-red-200"
+                            : level === "MEDIUM"
+                              ? "bg-orange-100 text-orange-700 border-orange-200"
+                              : level === "LOW"
+                                ? "bg-yellow-100 text-yellow-700 border-yellow-200"
+                                : "bg-gray-100 text-gray-700 border-gray-200"
                             }`}
                         >
                           {level}

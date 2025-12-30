@@ -44,7 +44,6 @@ import {
   Camera,
   Eye,
   EyeOff,
-  Upload,
   X,
 } from "lucide-react";
 import { format } from "date-fns";
@@ -52,29 +51,28 @@ import { toast } from "sonner";
 import { fileUpload } from "@/actions/file";
 import { useCreateUserMutation } from "@/redux/Api/userApi";
 
-// User Schema
+// User Schema matching backend DTO
 const userSchema = z.object({
   name: z
     .string()
     .min(1, "Name is required")
-    .max(100, "Name must be less than 100 characters"),
-  email: z.string().email("Invalid email address"),
-  phone: z.string().optional(),
+    .max(100, "Name must be less than 100 characters")
+    .optional(),
+  phone: z
+    .string()
+    .length(11, "Phone number must be exactly 11 digits")
+    .regex(/^01\d{9}$/, "Phone number must start with 01"),
+  email: z.string().email("Invalid email address").optional().or(z.literal("")),
   password: z
     .string()
     .min(6, "Password must be at least 6 characters")
-    .optional(),
-  profileImage: z.string().optional(),
-  dateOfBirth: z.date().optional(),
-  gender: z.enum(["Male", "Female"]).optional(),
-  role: z.enum(["USER", "ADMIN", "VENDOR"]),
-  address: z.string().optional(),
-  bio: z.string().max(500, "Bio must be less than 500 characters").optional(),
-  city: z.string().optional(),
-  state: z.string().optional(),
-  country: z.string().optional(),
-  postalCode: z.string().optional(),
-  isVerified: z.boolean(),
+    .max(32, "Password must not exceed 32 characters"),
+  address: z.string().optional().or(z.literal("")),
+  birthDate: z.date().optional(),
+  gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
+  emergencyContact: z.string().optional().or(z.literal("")),
+  bio: z.string().max(500, "Bio must be less than 500 characters").optional().or(z.literal("")),
+  avatar: z.string().optional().or(z.literal("")),
 });
 
 type UserFormValues = z.infer<typeof userSchema>;
@@ -101,20 +99,15 @@ const UserCreateModal = ({
     resolver: zodResolver(userSchema),
     defaultValues: {
       name: "",
-      email: "",
       phone: "",
+      email: "",
       password: "",
-      profileImage: "",
-      dateOfBirth: undefined,
-      gender: undefined,
-      role: "USER",
       address: "",
+      birthDate: undefined,
+      gender: undefined,
+      emergencyContact: "",
       bio: "",
-      city: "",
-      state: "",
-      country: "",
-      postalCode: "",
-      isVerified: false,
+      avatar: "",
     },
   });
 
@@ -122,12 +115,10 @@ const UserCreateModal = ({
     if (userData && open) {
       form.reset({
         ...userData,
-        dateOfBirth: userData.dateOfBirth
-          ? new Date(userData.dateOfBirth)
-          : undefined,
+        birthDate: userData.birthDate ? new Date(userData.birthDate) : undefined,
       });
-      if (userData.profileImage) {
-        setImagePreview(userData.profileImage);
+      if (userData.avatar) {
+        setImagePreview(userData.avatar);
       }
     } else if (!open) {
       form.reset();
@@ -149,7 +140,7 @@ const UserCreateModal = ({
       reader.onloadend = () => {
         const result = reader.result as string;
         setImagePreview(result);
-        form.setValue("profileImage", result);
+        form.setValue("avatar", result);
       };
       reader.readAsDataURL(file);
     }
@@ -158,17 +149,19 @@ const UserCreateModal = ({
   const removeImage = () => {
     setImagePreview("");
     setImageFile(null);
-    form.setValue("profileImage", "");
+    form.setValue("avatar", "");
   };
 
   const onSubmit = async (data: UserFormValues) => {
     const toastId = toast.loading("Creating user...");
 
     try {
+      // Upload image if exists
       if (imageFile) {
         try {
-          const uploadedUrls = await fileUpload([imageFile], "course");
-          data.profileImage = uploadedUrls[0];
+          const uploadedUrls = await fileUpload([imageFile], "user");
+          console.log("Image Upload", uploadedUrls[0]);
+          data.avatar = uploadedUrls[0];
         } catch (error: any) {
           toast.error(
             error?.message || error?.data?.message || "Failed to upload image!",
@@ -179,15 +172,25 @@ const UserCreateModal = ({
           );
           return;
         }
-      } else {
-        toast.info("No profile image selected, creating user without image.", {
-          id: toastId,
-          duration: 2000,
-        });
       }
+
+      // Prepare data for backend - remove empty optional fields
+      const submitData: any = {
+        phone: data.phone,
+        password: data.password,
+      };
+
+      if (data.name?.trim()) submitData.name = data.name.trim();
+      if (data.email?.trim()) submitData.email = data.email.trim();
+      if (data.address?.trim()) submitData.address = data.address.trim();
+      if (data.birthDate) submitData.birthDate = data.birthDate.toISOString();
+      if (data.gender) submitData.gender = data.gender;
+      if (data.emergencyContact?.trim()) submitData.emergencyContact = data.emergencyContact.trim();
+      if (data.bio?.trim()) submitData.bio = data.bio.trim();
+      if (data.avatar?.trim()) submitData.avatar = data.avatar.trim();
+
       try {
-        const response = await createUser(data).unwrap();
-        console.log("Response check", response);
+        const response = await createUser(submitData).unwrap();
         if (response?.statusCode === 201) {
           toast.success(response?.message || "User created successfully!", {
             id: toastId,
@@ -220,6 +223,7 @@ const UserCreateModal = ({
       console.error("Submission error:", error);
     }
   };
+
   const handleClose = () => {
     onOpenChange(false);
     form.reset();
@@ -227,14 +231,18 @@ const UserCreateModal = ({
     setImageFile(null);
   };
 
-  const getInitials = (name: string) => {
+  const getInitials = (name?: string) => {
+    if (!name) return "UN";
+
     return name
+      .trim()
       .split(" ")
       .map((n) => n[0])
       .join("")
       .toUpperCase()
       .slice(0, 2);
   };
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -248,8 +256,8 @@ const UserCreateModal = ({
         <Form {...form}>
           <div className="space-y-4">
             {/* Profile Image Upload */}
-            <div className="flex flex-col items-center gap-4 pb-4 border p-2  rounded-lg">
-              <Avatar className="h-24 w-24 bg-white !important">
+            <div className="flex flex-col items-center gap-4 pb-4 border p-2 rounded-lg">
+              <Avatar className="h-24 w-24 bg-white">
                 <AvatarImage src={imagePreview} alt="Profile" />
                 <AvatarFallback className="text-2xl">
                   {form.watch("name") ? getInitials(form.watch("name")) : "UN"}
@@ -260,9 +268,9 @@ const UserCreateModal = ({
                   type="button"
                   variant="outline"
                   size="sm"
-                  className=" hover:bg-primary hover:text-white cursor-pointer"
+                  className="hover:bg-primary hover:text-white cursor-pointer"
                   onClick={() =>
-                    document.getElementById("profileImage")?.click()
+                    document.getElementById("avatar")?.click()
                   }
                 >
                   <Camera className="h-4 w-4" />
@@ -272,7 +280,7 @@ const UserCreateModal = ({
                     type="button"
                     variant="outline"
                     size="sm"
-                    className=" hover:bg-primary hover:text-white cursor-pointer"
+                    className="hover:bg-primary hover:text-white cursor-pointer"
                     onClick={removeImage}
                   >
                     <X className="h-4 w-4" />
@@ -280,7 +288,7 @@ const UserCreateModal = ({
                 )}
               </div>
               <input
-                id="profileImage"
+                id="avatar"
                 type="file"
                 accept="image/*"
                 className="hidden"
@@ -298,14 +306,12 @@ const UserCreateModal = ({
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      Name <span className=" text-red-500">*</span>
-                    </FormLabel>
+                    <FormLabel>Name</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="John Doe"
                         {...field}
-                        className=" py-5"
+                        className="py-5"
                       />
                     </FormControl>
                     <FormMessage />
@@ -313,21 +319,21 @@ const UserCreateModal = ({
                 )}
               />
 
-              {/* Email */}
+              {/* Phone */}
               <FormField
                 control={form.control}
-                name="email"
+                name="phone"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Email <span className=" text-red-500">*</span>
+                      Phone <span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
                       <Input
-                        type="email"
-                        placeholder="john@example.com"
+                        placeholder="01XXXXXXXXX"
                         {...field}
-                        className=" py-5"
+                        className="py-5"
+                        maxLength={11}
                       />
                     </FormControl>
                     <FormMessage />
@@ -337,18 +343,19 @@ const UserCreateModal = ({
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              {/* Phone */}
+              {/* Email */}
               <FormField
                 control={form.control}
-                name="phone"
+                name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Phone</FormLabel>
+                    <FormLabel>Email</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="0134567890"
+                        type="email"
+                        placeholder="john@example.com"
                         {...field}
-                        className=" py-5"
+                        className="py-5"
                       />
                     </FormControl>
                     <FormMessage />
@@ -376,7 +383,7 @@ const UserCreateModal = ({
                           />
                           <button
                             type="button"
-                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200  rounded-md p-1"
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200 rounded-md p-1"
                             onClick={() => setSee(!see)}
                           >
                             {see ? (
@@ -394,7 +401,7 @@ const UserCreateModal = ({
               )}
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               {/* Gender */}
               <FormField
                 control={form.control}
@@ -407,13 +414,14 @@ const UserCreateModal = ({
                       defaultValue={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger className=" py-5 w-full">
-                          <SelectValue placeholder="Select" />
+                        <SelectTrigger className="py-5 w-full">
+                          <SelectValue placeholder="Select gender" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="Male">Male</SelectItem>
-                        <SelectItem value="Female">Female</SelectItem>
+                        <SelectItem value="MALE">Male</SelectItem>
+                        <SelectItem value="FEMALE">Female</SelectItem>
+                        <SelectItem value="OTHER">Other</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -421,39 +429,10 @@ const UserCreateModal = ({
                 )}
               />
 
-              {/* Role */}
+              {/* Birth Date */}
               <FormField
                 control={form.control}
-                name="role"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Role <span className=" text-red-500">*</span>
-                    </FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger className=" py-5 w-full">
-                          <SelectValue placeholder="Select role" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="USER">User</SelectItem>
-                        <SelectItem value="ADMIN">Admin</SelectItem>
-                        <SelectItem value="VENDOR">Vendor</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Date of Birth */}
-              <FormField
-                control={form.control}
-                name="dateOfBirth"
+                name="birthDate"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Birth Date</FormLabel>
@@ -493,6 +472,45 @@ const UserCreateModal = ({
               />
             </div>
 
+            {/* Emergency Contact */}
+            <FormField
+              control={form.control}
+              name="emergencyContact"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Emergency Contact</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="01XXXXXXXXX"
+                      {...field}
+                      className="py-5"
+                      maxLength={11}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Address */}
+            <FormField
+              control={form.control}
+              name="address"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Address</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="123 Main St, City, Country"
+                      {...field}
+                      className="py-5"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             {/* Bio */}
             <FormField
               control={form.control}
@@ -513,127 +531,21 @@ const UserCreateModal = ({
               )}
             />
 
-            {/* Address */}
-            <FormField
-              control={form.control}
-              name="address"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Address</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="123 Main St"
-                      {...field}
-                      className=" py-5"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-2 gap-4">
-              {/* City */}
-              <FormField
-                control={form.control}
-                name="city"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>City</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="New York"
-                        {...field}
-                        className=" py-5"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* State */}
-              <FormField
-                control={form.control}
-                name="state"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>State</FormLabel>
-                    <FormControl>
-                      <Input placeholder="NY" {...field} className=" py-5" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              {/* Country */}
-              <FormField
-                control={form.control}
-                name="country"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Country</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="United States"
-                        {...field}
-                        className=" py-5"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Postal Code */}
-              <FormField
-                control={form.control}
-                name="postalCode"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Postal Code</FormLabel>
-                    <FormControl>
-                      <Input placeholder="10001" {...field} className=" py-5" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {/* Is Verified */}
-            <FormField
-              control={form.control}
-              name="isVerified"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border border-border p-4">
-                  <div className="space-y-0.5">
-                    <FormLabel className="text-base">
-                      Verified Account
-                    </FormLabel>
-                    <FormDescription>
-                      Mark this account as verified
-                    </FormDescription>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
             <DialogFooter>
               <Button type="button" variant="outline" onClick={handleClose}>
                 Cancel
               </Button>
-              <Button type="button" onClick={form.handleSubmit(onSubmit)} className=" dark:bg-[#ff7200] dark:text-white">
-                {isEdit ? "Update User" : "Create User"}
+              <Button
+                type="button"
+                onClick={form.handleSubmit(onSubmit)}
+                className="dark:bg-[#ff7200] dark:text-white"
+                disabled={isLoading}
+              >
+                {isLoading
+                  ? "Creating..."
+                  : isEdit
+                    ? "Update User"
+                    : "Create User"}
               </Button>
             </DialogFooter>
           </div>

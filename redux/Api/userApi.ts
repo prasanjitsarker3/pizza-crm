@@ -26,7 +26,7 @@ export const userApi = baseApi.injectEndpoints({
         createUser: builder.mutation({
             query: (data: any) => {
                 return {
-                    url: "/users/create",
+                    url: "/users",
                     method: "POST",
                     body: data
                 }
