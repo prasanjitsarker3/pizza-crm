@@ -194,7 +194,7 @@ const TopProductTable = () => {
                         </Button>
                     )}
                 </form>
-                {/* <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2">
                     <Link href={"/admin/products/create"}>
                         <Button
                             type="submit"
@@ -204,7 +204,7 @@ const TopProductTable = () => {
                             <Plus /> Create Product
                         </Button>
                     </Link>
-                </div> */}
+                </div>
             </div>
 
             <div className="rounded-md border">
