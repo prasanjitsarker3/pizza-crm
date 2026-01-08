@@ -2,22 +2,60 @@
 import { useGetSingleOrderQuery } from '@/redux/Api/orderApi';
 import { Order } from '@/types/order.type';
 import { useParams } from 'next/navigation'
-import React from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { ArrowLeft, Calendar, CreditCard, DollarSign, Mail, MapPin, Package, Phone, User } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { useReactToPrint } from "react-to-print";
+import { InvoiceTemplate } from './OrderInvoice';
+import OrderStatusUpdateModal from '@/components/Order/OrderStatusUpdateModal';
+import PaymentStatusUpdateModal from '@/components/Order/PaymentStatusUpdateModal';
 
 
 const OrderView = () => {
   const { id } = useParams();
-  console.log("order id", id)
+  const [isMounted, setIsMounted] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [selectOrder, setSelectOrder] = useState<Order | null>(null);
+  const [openStatusModal, setOpenStatusModal] = useState(false);
+  const [openPaymentStatusModal, setOpenPaymentStatusModal] = useState(false);
+
   const { data, isLoading } = useGetSingleOrderQuery(id as string);
+
+
+
+  const handleDownloadPdf = useReactToPrint({
+    contentRef,
+    documentTitle: `Invoice-${id}`,
+  });
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   if (isLoading) {
-    return <h1>Loading...</h1>
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <h1 className="text-xl font-semibold">Loading Order Details...</h1>
+      </div>
+    );
   }
   const orderData: Order = data?.data
+
+
+  const handleStatusUpdate = (order: Order) => {
+    setSelectOrder(order);
+    setOpenStatusModal(true);
+  }
+
+
+  const handlePaymentStatusUpdate = (order: Order) => {
+    setSelectOrder(order);
+    setOpenPaymentStatusModal(true);
+  }
+
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -60,6 +98,9 @@ const OrderView = () => {
 
   return (
     <div>
+      <div className="hidden">
+        <InvoiceTemplate ref={contentRef} data={orderData} />
+      </div>
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 bg-white p-3">
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">
@@ -75,8 +116,11 @@ const OrderView = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline">Print Invoice</Button>
-            <Button>Update Status</Button>
+            <Button variant="outline" onClick={() => handleDownloadPdf()}>
+              Download Invoice
+            </Button>
+            <Button onClick={() => handleStatusUpdate(orderData)}>Update Status</Button>
+            <Button onClick={() => handlePaymentStatusUpdate(orderData)}>Update Payment Status</Button>
           </div>
         </div>
 
@@ -277,6 +321,17 @@ const OrderView = () => {
           </div>
         </div>
       </div>
+
+      {
+        selectOrder && openStatusModal && (
+          <OrderStatusUpdateModal orderData={selectOrder} open={openStatusModal} onOpenChange={setOpenStatusModal} />
+        )
+      }
+      {
+        selectOrder && openPaymentStatusModal && (
+          <PaymentStatusUpdateModal orderData={selectOrder} open={openPaymentStatusModal} onOpenChange={setOpenPaymentStatusModal} />
+        )
+      }
     </div>
   )
 }

@@ -22,6 +22,9 @@ import { TableSkeleton } from "../Common/TableSkeleton";
 import { Order } from "@/types/order.type";
 import { Card } from "../ui/card";
 import Link from "next/link";
+import OrderStatusUpdateModal from "./OrderStatusUpdateModal";
+import { orderStatusColorMap } from "./orderStatusConfig";
+import PaymentStatusUpdateModal from "./PaymentStatusUpdateModal";
 
 
 
@@ -32,7 +35,8 @@ const OrderTable = () => {
   const [selectOrder, setSelectOrder] = useState<Order | null>(null);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [expandedOrders, setExpandedOrders] = useState<string[]>([]);
-
+  const [openStatusModal, setOpenStatusModal] = useState(false);
+  const [openPaymentStatusModal, setOpenPaymentStatusModal] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [limit, setLimit] = useState(10);
@@ -52,7 +56,7 @@ const OrderTable = () => {
   if (isLoading) return <TableSkeleton />;
 
   const orderData: Order[] = data?.data?.data || data?.data || [];
-  console.log("order data", orderData)
+  // console.log("order data", orderData)
   const orderMeta: PaginationMeta = data?.meta || data?.data?.meta || { page: 1, limit, total: 0 };
   const totalPages = Math.ceil(orderMeta.total / orderMeta.limit);
 
@@ -88,6 +92,18 @@ const OrderTable = () => {
     setDropdownOpenId(null);
   };
 
+  const handleStatusUpdate = (order: Order) => {
+    setSelectOrder(order);
+    setOpenStatusModal(true);
+    setDropdownOpenId(null)
+  }
+
+
+  const handlePaymentStatusUpdate = (order: Order) => {
+    setSelectOrder(order);
+    setOpenPaymentStatusModal(true);
+    setDropdownOpenId(null)
+  }
   const handleDeleteConfirmation = async () => {
     if (!selectOrder) return;
     const toastId = toast.loading("Deleting order...");
@@ -211,7 +227,7 @@ const OrderTable = () => {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={getStatusColor(order.orderStatus)}>
+                      <Badge variant="outline" className={orderStatusColorMap[order.orderStatus] ?? "bg-gray-500/10"}>
                         {order.orderStatus}
                       </Badge>
                     </TableCell>
@@ -245,7 +261,19 @@ const OrderTable = () => {
                               View Details
                             </Link>
                           </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleStatusUpdate(order)} asChild className="cursor-pointer">
+                            <div className="flex items-center gap-2">
+                              <Eye className="mr-2 h-4 w-4" />
+                              Status Update
+                            </div>
+                          </DropdownMenuItem>
 
+                          <DropdownMenuItem onClick={() => handlePaymentStatusUpdate(order)} asChild className="cursor-pointer">
+                            <div className="flex items-center gap-2">
+                              <Eye className="mr-2 h-4 w-4" />
+                              Payment Status Update
+                            </div>
+                          </DropdownMenuItem>
 
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
@@ -404,6 +432,17 @@ const OrderTable = () => {
           isLoading={isDeleting}
         />
       )}
+
+      {
+        selectOrder && openStatusModal && (
+          <OrderStatusUpdateModal orderData={selectOrder} open={openStatusModal} onOpenChange={setOpenStatusModal} />
+        )
+      }
+      {
+        selectOrder && openPaymentStatusModal && (
+          <PaymentStatusUpdateModal orderData={selectOrder} open={openPaymentStatusModal} onOpenChange={setOpenPaymentStatusModal} />
+        )
+      }
     </div>
   );
 };

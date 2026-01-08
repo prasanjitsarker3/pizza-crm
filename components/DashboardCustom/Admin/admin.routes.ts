@@ -65,21 +65,21 @@ export const adminRoutes = () => [
     label: "Order Management",
     href: "/admin/orders",
   },
-  {
-    icon: Tags,
-    label: "Coupon Management",
-    href: "/admin/coupon",
-  },
-  {
-    icon: Settings,
-    label: "Settings",
-    href: "/admin/setting",
-  },
-  {
-    icon: HelpCircle,
-    label: "Help & Support",
-    href: "/admin/help-support",
-  },
+  // {
+  //   icon: Tags,
+  //   label: "Coupon Management",
+  //   href: "/admin/coupon",
+  // },
+  // {
+  //   icon: Settings,
+  //   label: "Settings",
+  //   href: "/admin/setting",
+  // },
+  // {
+  //   icon: HelpCircle,
+  //   label: "Help & Support",
+  //   href: "/admin/help-support",
+  // },
   // {
   //   icon: LogOut,
   //   label: "Logout",
