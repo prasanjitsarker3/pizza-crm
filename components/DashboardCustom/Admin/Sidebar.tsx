@@ -109,8 +109,11 @@ const Sidebar = ({
         >
           {!isCollapsed && (
             <div className="flex items-center gap-2">
-              {logo}
-              <h1 className="text-xl font-bold">{title}</h1>
+              <img
+                src="/logo.png"
+                alt="Logo"
+                className="h-14 w-auto block object-contain"
+              />
             </div>
           )}
           {isCollapsed && logo}

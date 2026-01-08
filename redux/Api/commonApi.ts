@@ -7,13 +7,12 @@ export const commonApi = baseApi.injectEndpoints({
         getAnalysis: builder.query({
             query: () => {
                 return {
-                    url: '/analytics',
+                    url: '/analysis/admin',
                     method: "GET",
 
                 }
             },
         }),
-
     }),
 });
 
