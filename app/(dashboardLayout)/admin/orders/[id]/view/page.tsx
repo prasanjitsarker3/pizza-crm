@@ -165,7 +165,7 @@ const OrderView = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Total Amount</p>
-                <p className="mt-1 text-xl font-semibold">${orderData.totalAmount.toFixed(2)}</p>
+                <p className="mt-1 text-xl font-semibold">€{orderData.totalAmount.toFixed(2)}</p>
               </div>
             </div>
           </Card>
@@ -206,7 +206,7 @@ const OrderView = () => {
                         <p className="mt-1 text-sm text-muted-foreground">Quantity: {item.quantity}</p>
                       </div>
                       <p className="text-sm font-semibold">
-                        ${item.price.toFixed(2)} × {item.quantity} = ${(item.price * item.quantity).toFixed(2)}
+                        €{item.price.toFixed(2)} × {item.quantity} = €{(item.price * item.quantity).toFixed(2)}
                       </p>
                     </div>
                   </div>
@@ -220,24 +220,24 @@ const OrderView = () => {
               <div className="space-y-3">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Subtotal</span>
-                  <span className="font-medium">${orderData.subtotal.toFixed(2)}</span>
+                  <span className="font-medium">€{orderData.subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Discount</span>
                   <span className="font-medium text-green-600">
-                    {orderData.discountAmount > 0 ? `-$${orderData.discountAmount.toFixed(2)}` : "$0.00"}
+                    {orderData.discountAmount > 0 ? `-€ ${orderData.discountAmount.toFixed(2)}` : "€ 0.00"}
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Delivery Charge</span>
                   <span className="font-medium">
-                    {orderData.deliveryCharge > 0 ? `$${orderData.deliveryCharge.toFixed(2)}` : "Free"}
+                    {orderData.deliveryCharge > 0 ? `€ ${orderData.deliveryCharge.toFixed(2)}` : "Free"}
                   </span>
                 </div>
                 <div className="border-t border-border pt-3">
                   <div className="flex items-center justify-between">
                     <span className="text-base font-semibold">Total</span>
-                    <span className="text-xl font-bold">${orderData.totalAmount.toFixed(2)}</span>
+                    <span className="text-xl font-bold">€ {orderData.totalAmount.toFixed(2)}</span>
                   </div>
                 </div>
               </div>

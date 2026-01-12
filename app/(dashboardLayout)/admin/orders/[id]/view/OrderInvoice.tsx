@@ -23,15 +23,15 @@ export const InvoiceTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }
                             className="h-14 w-auto block object-contain"
                         />
                     </div>
-                    <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">INVOICE</h1>
-                    <p className="text-sm text-slate-500 mt-1">Order ID: #{data.id.slice(-6).toUpperCase()}</p>
+                    <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">FACTURE</h1>
+                    <p className="text-sm text-slate-500 mt-1">Commande ID: #{data.id.slice(-6).toUpperCase()}</p>
                 </div>
                 <div className="text-right">
                     <div className={`inline-flex px-3 py-1 rounded-full text-xs font-bold uppercase mb-4 ${data.paymentStatus === "PAID" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
                         }`}>
                         {data.paymentStatus}
                     </div>
-                    <p className="font-semibold text-slate-900">Date Issued</p>
+                    <p className="font-semibold text-slate-900">Date d’émission</p>
                     <p className="text-sm text-slate-500">{new Date(data.createdAt).toLocaleDateString()}</p>
                 </div>
             </div>
@@ -39,7 +39,7 @@ export const InvoiceTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }
             {/* Addresses */}
             <div className="grid grid-cols-2 gap-12 my-10">
                 <div>
-                    <h3 className="text-xs font-bold uppercase text-slate-400 mb-2">Billed To</h3>
+                    <h3 className="text-xs font-bold uppercase text-slate-400 mb-2">FACTURÉ À</h3>
                     <p className="font-bold text-slate-900">{data.customerName}</p>
                     <p className="text-sm text-slate-600 leading-relaxed">
                         {data.customerAddress}<br />
@@ -48,12 +48,12 @@ export const InvoiceTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }
                     </p>
                 </div>
                 <div className="text-right">
-                    <h3 className="text-xs font-bold uppercase text-slate-400 mb-2">Shipped From</h3>
-                    <p className="font-bold text-slate-900">Your Store Name</p>
+                    <h3 className="text-xs font-bold uppercase text-slate-400 mb-2">EXPÉDIÉ PAR</h3>
+                    <p className="font-bold text-slate-900">Pizzart86</p>
                     <p className="text-sm text-slate-600 leading-relaxed">
-                        123 Business Street<br />
-                        Dhaka, Bangladesh<br />
-                        support@yourstore.com
+                        12 Rue de la Bugellerie<br />
+                        86000 Poitiers, France<br />
+                        pizzart86@gmail.com
                     </p>
                 </div>
             </div>
@@ -64,8 +64,8 @@ export const InvoiceTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }
                     <thead>
                         <tr className="border-b-2 border-slate-900 text-left">
                             <th className="py-3 font-bold text-sm uppercase">Item Description</th>
-                            <th className="py-3 font-bold text-sm uppercase text-center">Qty</th>
-                            <th className="py-3 font-bold text-sm uppercase text-right">Price</th>
+                            <th className="py-3 font-bold text-sm uppercase text-center">Qté</th>
+                            <th className="py-3 font-bold text-sm uppercase text-right">Prix</th>
                             <th className="py-3 font-bold text-sm uppercase text-right">Total</th>
                         </tr>
                     </thead>
@@ -76,9 +76,9 @@ export const InvoiceTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }
                                     <p className="font-semibold text-slate-900">{item.product.name}</p>
                                 </td>
                                 <td className="py-4 text-center text-slate-600">{item.quantity}</td>
-                                <td className="py-4 text-right text-slate-600">${item.price.toFixed(2)}</td>
+                                <td className="py-4 text-right text-slate-600">€{item.price.toFixed(2)}</td>
                                 <td className="py-4 text-right font-semibold text-slate-900">
-                                    ${(item.price * item.quantity).toFixed(2)}
+                                    €{(item.price * item.quantity).toFixed(2)}
                                 </td>
                             </tr>
                         ))}
@@ -90,28 +90,28 @@ export const InvoiceTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }
             <div className="flex justify-end mt-10">
                 <div className="w-full max-w-[250px] space-y-3">
                     <div className="flex justify-between text-sm">
-                        <span className="text-slate-500">Subtotal</span>
-                        <span className="font-medium">${data.subtotal.toFixed(2)}</span>
+                        <span className="text-slate-500">Sous-total</span>
+                        <span className="font-medium">€{data.subtotal.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                        <span className="text-slate-500">Shipping</span>
-                        <span className="font-medium">${data.deliveryCharge.toFixed(2)}</span>
+                        <span className="text-slate-500">Livraison</span>
+                        <span className="font-medium">€{data.deliveryCharge.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                        <span className="text-slate-500">Discount</span>
-                        <span className="font-medium text-green-600">-${data.discountAmount.toFixed(2)}</span>
+                        <span className="text-slate-500">Remise</span>
+                        <span className="font-medium text-green-600">€ {data.discountAmount.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between border-t border-slate-900 pt-3">
-                        <span className="font-bold text-lg">Total</span>
-                        <span className="font-bold text-lg text-primary">${data.totalAmount.toFixed(2)}</span>
+                        <span className="font-bold text-lg">Total à payer</span>
+                        <span className="font-bold text-lg text-primary">€ {data.totalAmount.toFixed(2)}</span>
                     </div>
                 </div>
             </div>
 
             {/* Footer */}
             <div className="mt-20 border-t border-slate-100 pt-8 text-center">
-                <p className="text-sm font-semibold text-slate-900">Thank you for your purchase!</p>
-                <p className="text-xs text-slate-500 mt-1">If you have any questions, please contact us at any time.</p>
+                <p className="text-sm font-semibold text-slate-900">Merci pour votre commande !</p>
+                <p className="text-xs text-slate-500 mt-1">Pour toute question, contactez-nous à tout moment.</p>
             </div>
         </div>
     );

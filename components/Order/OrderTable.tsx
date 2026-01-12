@@ -109,7 +109,7 @@ const OrderTable = () => {
     const toastId = toast.loading("Deleting order...");
     try {
       const response = await deleteOrder(selectOrder.id).unwrap();
-      if (response.success) {
+      if (response.statusCode === 200) {
         toast.success(response.message || "Order deleted", { id: toastId });
         setOpenDeleteModal(false);
       }
@@ -149,7 +149,7 @@ const OrderTable = () => {
   }
 
   const formatCurrency = (amount: number) => {
-    return `$${amount.toFixed(2)}`
+    return `€ ${amount.toFixed(2)}`
   }
 
   return (
