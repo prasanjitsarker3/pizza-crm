@@ -25,6 +25,8 @@ export interface Order {
   customerPhone: string
   customerAddress: string
   notes: string
+  receivedDate: string
+  receivedTime: string
   subtotal: number
   totalAmount: number
   discountAmount: number

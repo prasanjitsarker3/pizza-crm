@@ -8,6 +8,18 @@ interface Props {
 }
 
 export const InvoiceTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, ref) => {
+    const formatReceivedDateTime = (dateStr: string, timeStr: string) => {
+        if (!dateStr) return "";
+        const date = new Date(dateStr);
+        const options: Intl.DateTimeFormatOptions = {
+            day: "numeric",
+            month: "short",
+            year: "2-digit",
+        };
+        const formattedDate = date.toLocaleDateString("en-US", options);
+        const formattedTime = timeStr.replace(/\s+/g, "");
+        return `${formattedDate} - ${formattedTime}`;
+    };
     return (
         <div ref={ref} className="p-12 bg-white text-slate-800 w-[210mm] min-h-[297mm] mx-auto">
             {/* Header */}
@@ -46,6 +58,13 @@ export const InvoiceTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }
                         {data.customerPhone}<br />
                         {data.user.email}
                     </p>
+                    {/* Pickup / Delivery */}
+                    {data.receivedDate && data.receivedTime && (
+                        <div className="mt-4">
+                            <h3 className="text-xs font-bold uppercase text-slate-400 mb-1">Pickup / Delivery</h3>
+                            <p className="text-sm text-slate-600">{formatReceivedDateTime(data.receivedDate, data.receivedTime)}</p>
+                        </div>
+                    )}
                 </div>
                 <div className="text-right">
                     <h3 className="text-xs font-bold uppercase text-slate-400 mb-2">EXPÉDIÉ PAR</h3>

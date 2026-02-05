@@ -56,7 +56,7 @@ const OrderTable = () => {
   if (isLoading) return <TableSkeleton />;
 
   const orderData: Order[] = data?.data?.data || data?.data || [];
-  // console.log("order data", orderData)
+  console.log("order data", orderData)
   const orderMeta: PaginationMeta = data?.meta || data?.data?.meta || { page: 1, limit, total: 0 };
   const totalPages = Math.ceil(orderMeta.total / orderMeta.limit);
 
@@ -152,6 +152,20 @@ const OrderTable = () => {
     return `€ ${amount.toFixed(2)}`
   }
 
+  const formatReceivedDateTime = (dateStr: string, timeStr: string) => {
+    if (!dateStr) return "";
+    const date = new Date(dateStr);
+    const options: Intl.DateTimeFormatOptions = {
+      day: "numeric",
+      month: "short",
+      year: "2-digit",
+    };
+    const formattedDate = date.toLocaleDateString("en-US", options);
+    const formattedTime = timeStr.replace(/\s+/g, "");
+    return `${formattedDate} - ${formattedTime}`;
+  };
+
+
   return (
     <div className="space-y-4 bg-white p-3">
       {/* Search */}
@@ -183,6 +197,7 @@ const OrderTable = () => {
               <TableHead className="font-semibold">Total</TableHead>
               <TableHead className="font-semibold">Payment</TableHead>
               <TableHead className="font-semibold">Status</TableHead>
+              <TableHead className="font-semibold">Pickup/Delivery</TableHead>
               <TableHead className="font-semibold">Date</TableHead>
               <TableHead className="font-semibold">Action</TableHead>
             </TableRow>
@@ -231,6 +246,10 @@ const OrderTable = () => {
                         {order.orderStatus}
                       </Badge>
                     </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {formatReceivedDateTime(order.receivedDate, order.receivedTime)}
+                    </TableCell>
+
                     <TableCell className="text-sm text-muted-foreground">{formatDate(order.createdAt)}</TableCell>
 
                     <TableCell className="text-right">

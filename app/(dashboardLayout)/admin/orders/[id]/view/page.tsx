@@ -43,6 +43,7 @@ const OrderView = () => {
     );
   }
   const orderData: Order = data?.data
+  console.log("Single order data", orderData)
 
 
   const handleStatusUpdate = (order: Order) => {
@@ -94,6 +95,22 @@ const OrderView = () => {
       minute: "2-digit",
     })
   }
+
+
+
+  const formatReceivedDateTime = (dateStr: string, timeStr: string) => {
+    if (!dateStr) return "";
+    const date = new Date(dateStr);
+    const options: Intl.DateTimeFormatOptions = {
+      day: "numeric",
+      month: "short",
+      year: "2-digit",
+    };
+    const formattedDate = date.toLocaleDateString("en-US", options);
+    const formattedTime = timeStr.replace(/\s+/g, "");
+    return `${formattedDate} - ${formattedTime}`;
+  };
+
 
 
   return (
@@ -167,6 +184,7 @@ const OrderView = () => {
                 <p className="text-sm text-muted-foreground">Total Amount</p>
                 <p className="mt-1 text-xl font-semibold">€{orderData.totalAmount.toFixed(2)}</p>
               </div>
+
             </div>
           </Card>
 
@@ -234,12 +252,19 @@ const OrderView = () => {
                     {orderData.deliveryCharge > 0 ? `€ ${orderData.deliveryCharge.toFixed(2)}` : "Free"}
                   </span>
                 </div>
+                {
+                  orderData?.receivedDate && orderData?.receivedTime && <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Order Pickup / Delivery</span>
+                    <span>{formatReceivedDateTime(orderData?.receivedDate, orderData?.receivedTime)}</span>
+                  </div>
+                }
                 <div className="border-t border-border pt-3">
                   <div className="flex items-center justify-between">
                     <span className="text-base font-semibold">Total</span>
                     <span className="text-xl font-bold">€ {orderData.totalAmount.toFixed(2)}</span>
                   </div>
                 </div>
+
               </div>
             </Card>
 
